@@ -40,16 +40,10 @@ var otherTodo = new Todo({
     completedAt: 2019
 });
 
-<<<<<<< HEAD
-otherTodo.save().then((doc) => {
-    console.log('Tarea guardada');
-    console.log(JSON.stringify(doc, undefined, 2));
-}, (er) => {
-=======
+
 otherTodo.save().then((doc)=>{
     console.log('Tarea guardada');
     console.log(JSON.stringify(doc,undefined,2));
 },(er)=>{
->>>>>>> 44f4f882b5bab6880025ce942b42a82e4a847a46
     console.log('No se pudo agregar la tarea.');
 });
