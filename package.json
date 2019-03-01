@@ -1,7 +1,6 @@
 {
   "name": "todo-api",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,6 +9,15 @@
   "license": "ISC",
   "dependencies": {
     "mongodb": "^3.1.13",
-    "mongoose": "^5.4.15"
-  }
+    "mongoose": "^5.4.16"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lailaweil/node-todo-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lailaweil/node-todo-api/issues"
+  },
+  "homepage": "https://github.com/lailaweil/node-todo-api#readme",
+  "description": ""
 }

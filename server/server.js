@@ -1,49 +1,31 @@
-var mongoose = require('mongoose');
+var express = require('express');
+var bodyparser = require('body-parser');
 
-mongoose.Promise = global.Promise;
-mongoose.connect('mongodb://localhost:27017/TodoApp', {
-    useNewUrlParser: true
-});
 
-var Todo = mongoose.model('Todo', { //seteo de modelo para la database
-    text: {
-mongoose.connect('mongodb://localhost:27017/TodoApp',{ useNewUrlParser: true });
+var {mongoose} = require ('./db/mongoose');
+var {Todo} = require('./models/todo');
+var {User} = require('./models/users');
 
-var Todo = mongoose.model('Todo', { //seteo de modelo para la database
-    text :{
-        type: String
-    },
-    completed: {
-        type: Boolean
-    },
-    completedAt: {
-    completedAt:{
-        type: Number
-    }
-});
 
-var newTodo = new Todo({ //creo una instancia de Todo
-    text: 'Cook dinner'
-});
+var app = express();
 
-//guardo
-newTodo.save().then((doc)=>{
-    console.log('Tarea guardada con éxito.');
-    console.log(doc);
-}, (e)=>{
-    console.log('No se pudo guardar la tarea.');
-});
+app.use(bodyparser.json());
 
-var otherTodo = new Todo({
-    text: 'otro to do',
-    completed: true,
-    completedAt: 2019
+app.post('/todos',(req, res)=>{
+    var todo = new Todo({
+        text: req.body.text
+    });
+
+    todo.save().then((doc)=>{
+        res.send(doc);
+    },(e)=>{
+        res.status(400).send(e);
+    });
 });
 
 
-otherTodo.save().then((doc)=>{
-    console.log('Tarea guardada');
-    console.log(JSON.stringify(doc,undefined,2));
-},(er)=>{
-    console.log('No se pudo agregar la tarea.');
+var port = 3000;
+
+app.listen(port, ()=>{
+    console.log(`Started on port ${port}`);
 });
