@@ -2,10 +2,11 @@ const express = require('express');
 const _ = require('lodash');
 const bodyparser = require('body-parser');
 const {ObjectID} = require('mongodb');
+const jwt = require('jsonwebtoken');
 
 var {mongoose} = require ('./db/mongoose');
 var {Todo} = require('./models/todo');
-var {User} = require('./models/users');
+var {User} = require('./models/user');
 
 
 var app = express();
@@ -14,6 +15,11 @@ const port = process.env.PORT || 3000
 app.use(bodyparser.json());
 
 mongoose.set('useFindAndModify', false);
+mongoose.set('useNewUrlParser', true);
+mongoose.set('useCreateIndex', true);
+
+
+
 
 app.post('/todos',(req, res)=>{
     var todo = new Todo({
@@ -85,6 +91,58 @@ app.patch('/todos/:id', (req,res)=>{
     }).catch((err)=>{
         res.status(400).send();
     });
+});
+
+app.post('/users',(req,res) => {
+    
+    var user = new User({
+        email: req.body.email,
+        password: req.body.password
+    });
+
+    user.save((err, token) =>{
+        if(err){
+            res.status(400).send(err);
+        }else{
+            res.send(user.generateAuthToken());
+        }
+    });
+});
+
+app.get('/users/me', (req, res) =>{
+    let token = req.headers['authorization'];
+    if(!token){
+        res.status(400).send({
+            error: 'Es necesario el token de autenticación'
+        });
+        return;
+    }
+    token = token.replace('Bearer ', '');
+
+
+    jwt.verify(token, 'abc123', function(err, user) {
+        if (err) {
+          res.status(401).send({
+            error: 'Token inválido'
+          });
+        } else {
+            User.findById(user._id).then((user)=>{
+                if(!user) res.send('User no encontrado!!');
+                res.send({
+                    message: `Bienvenido ${user.email}`
+                  });
+            }).catch((err)=>{
+                res.send('user inválido');
+            });
+        }
+      });
+    // res.send('congratulations');
+});
+
+app.use((err,req,res,next)=>{
+    if( err.name === 'UnauthorizedError'){
+        res.status(500).send(err.message);
+    }
 });
 
 app.listen(port, ()=>{
