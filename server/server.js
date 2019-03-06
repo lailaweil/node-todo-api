@@ -3,6 +3,7 @@ const _ = require('lodash');
 const bodyparser = require('body-parser');
 const {ObjectID} = require('mongodb');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 var {mongoose} = require ('./db/mongoose');
 var {Todo} = require('./models/todo');
@@ -138,6 +139,30 @@ app.get('/users/me', (req, res) =>{
       });
     // res.send('congratulations');
 });
+//POST /user/login 
+app.post('/users/login', (req, res)=>{
+    User.findOne({
+        email: req.body.email
+    },(err, user)=>{
+        if(!user){
+            res.send('El usuario no esta registrado.');
+        }else if (err){
+            res.status(400).send();
+        }else {
+            bcrypt.compare(req.body.password,user.password, (err,completed)=>{
+                if(completed){
+                    res.send(user.generateAuthToken());
+                }else if(err){
+                    res.send('Oops! Hubo un problema!');
+                }else{
+                    res.send('Contraseña incorecta');
+                }
+            });
+        }
+    });
+});
+
+
 
 app.use((err,req,res,next)=>{
     if( err.name === 'UnauthorizedError'){
