@@ -21,6 +21,9 @@ var UserSchema = new mongoose.Schema({
     type: String,
     require: true,
     minlength: 6
+  },
+  token:{
+    type: String,      
   }
 });
 
@@ -28,10 +31,9 @@ UserSchema.pre('save', function(next) {
     var user = this;
 
     if(user.isModified('password')){
-        console.log(user.password);
+      
         bcrypt.genSalt(10, function (err, salt){
             bcrypt.hash(user.password, salt, function(err,hash) {
-                console.log(hash);
                 user.password = hash;
                 next();
             });
@@ -48,16 +50,30 @@ UserSchema.methods.toJSON = function () {
   return _.pick(userObject, ['_id', 'email']);
 };
 
-UserSchema.methods.generateAuthToken = function () {
+UserSchema.methods.generateAuthToken = function (callback) {
   var user = this;
-//   var access = 'Authentication';
   var token = jwt.sign({_id: user._id}, 'abc123',{
     expiresIn: 60 * 60 * 24 // expires in 24 hours
  }).toString();
 
-    return token;
-
+    User.findByIdAndUpdate(user._id,{
+        token: token
+    }).then((user)=>{
+        callback(token);
+    }).catch((e) =>{
+        res.status(400).send();
+    });
 };
+
+
+UserSchema.methods.removeToken = function(token) {
+    let user = this;
+
+    return user.updateOne({
+            token: null
+    });
+};
+
 
 var User = mongoose.model('User', UserSchema);
 

@@ -5,9 +5,10 @@ const {ObjectID} = require('mongodb');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-var {mongoose} = require ('./db/mongoose');
-var {Todo} = require('./models/todo');
-var {User} = require('./models/user');
+const {authenticate} = require('./middleware/authenticate');
+const {mongoose} = require ('./db/mongoose');
+const {Todo} = require('./models/todo');
+const {User} = require('./models/user');
 
 
 var app = express();
@@ -66,7 +67,6 @@ app.delete('/todos/:id',(req,res)=>{
     Todo.findByIdAndDelete(id).then((todo)=>{
         if(!todo) res.status(404).send();
         res.send(todo);
-        console.log(todo);
     }).catch((e)=>{
         res.status(400).send();
     });
@@ -105,39 +105,17 @@ app.post('/users',(req,res) => {
         if(err){
             res.status(400).send(err);
         }else{
-            res.send(user.generateAuthToken());
+            var tokenn = user.generateAuthToken((token)=>{
+                res.header('authorization',token);
+                res.send('Sign in existoso!');
+                // res.sendFile('html/users.html', {root: __dirname });
+            });            
         }
     });
 });
 
-app.get('/users/me', (req, res) =>{
-    let token = req.headers['authorization'];
-    if(!token){
-        res.status(400).send({
-            error: 'Es necesario el token de autenticación'
-        });
-        return;
-    }
-    token = token.replace('Bearer ', '');
-
-
-    jwt.verify(token, 'abc123', function(err, user) {
-        if (err) {
-          res.status(401).send({
-            error: 'Token inválido'
-          });
-        } else {
-            User.findById(user._id).then((user)=>{
-                if(!user) res.send('User no encontrado!!');
-                res.send({
-                    message: `Bienvenido ${user.email}`
-                  });
-            }).catch((err)=>{
-                res.send('user inválido');
-            });
-        }
-      });
-    // res.send('congratulations');
+app.get('/users/me',authenticate, (req, res) =>{
+    res.send(`Bienvenido ${req.user.email}`);
 });
 //POST /user/login 
 app.post('/users/login', (req, res)=>{
@@ -162,7 +140,13 @@ app.post('/users/login', (req, res)=>{
     });
 });
 
-
+app.delete('/users/me/token',authenticate, (req,res) =>{
+    req.user.removeToken(req.token).then(()=>{
+        res.status(200).send('Chau!');
+    },()=>{
+        res.status(400).send('Oops no se pudo salir de la cuenta!');
+    });
+});
 
 app.use((err,req,res,next)=>{
     if( err.name === 'UnauthorizedError'){
