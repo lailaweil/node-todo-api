@@ -15,6 +15,10 @@ var Todo = mongoose.model('Todo', { //seteo de modelo para la database
     completedAt:{
         type: Number,
         default: null
+    },
+    _creator: {
+        require: true,
+        type: mongoose.Schema.Types.ObjectId
     }
 });
 

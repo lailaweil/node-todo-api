@@ -23,9 +23,10 @@ mongoose.set('useCreateIndex', true);
 
 
 
-app.post('/todos',(req, res)=>{
+app.post('/todos',authenticate,(req, res)=>{
     var todo = new Todo({
-        text: req.body.text
+        text: req.body.text,
+        _creator: req.user._id
     });
 
     todo.save().then((doc)=>{
@@ -35,8 +36,10 @@ app.post('/todos',(req, res)=>{
     });
 });
 
-app.get('/todos',(req,res)=>{
-    Todo.find().then((todos)=>{
+app.get('/todos',authenticate,(req,res)=>{
+    Todo.find({
+        _creator: req.user._id
+    }).then((todos)=>{
         res.send({todos});
     },(err)=>{
         res.status(400).send(err);
@@ -44,12 +47,15 @@ app.get('/todos',(req,res)=>{
 });
 
 
-app.get('/todos/:id', (req,res)=>{
+app.get('/todos/:id', authenticate,(req,res)=>{
     var id = req.params.id;
 
     if(!ObjectID.isValid(id)) return res.status(404).send();
 
-    Todo.findById(id).then((todo)=>{
+    Todo.findOne({
+        _creator: req.user._creator,
+        _id: id
+    }).then((todo)=>{
         if(!todo) res.status(404).send();
         res.send(todo);
     }).catch((e)=>{
@@ -59,12 +65,15 @@ app.get('/todos/:id', (req,res)=>{
 
 });
 
-app.delete('/todos/:id',(req,res)=>{
+app.delete('/todos/:id',authenticate, (req,res)=>{
     var id = req.params.id;
 
     if(!ObjectID.isValid(id)) return res.status(404).send();
 
-    Todo.findByIdAndDelete(id).then((todo)=>{
+    Todo.findOneAndDelete({
+        _creator: req.user._id,
+        _id: id
+    }).then((todo)=>{
         if(!todo) res.status(404).send();
         res.send(todo);
     }).catch((e)=>{
@@ -72,7 +81,7 @@ app.delete('/todos/:id',(req,res)=>{
     });
 });
 
-app.patch('/todos/:id', (req,res)=>{
+app.patch('/todos/:id', authenticate, (req,res)=>{
     var id = req.params.id;
     var body = _.pick(req.body,['text', 'completed']); //user no puede update el completedAt
 
@@ -86,7 +95,10 @@ app.patch('/todos/:id', (req,res)=>{
         body.completedAt = null;
     }
 
-    Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo)=>{
+    Todo.findOneAndUpdate({
+        _creator: req.user._id,
+        _id: id
+    }, {$set: body}, {new: true}).then((todo)=>{
         if(!todo) res.status(404).send();
         res.send({todo});
     }).catch((err)=>{
@@ -105,9 +117,9 @@ app.post('/users',(req,res) => {
         if(err){
             res.status(400).send(err);
         }else{
-            var tokenn = user.generateAuthToken((token)=>{
+                user.generateAuthToken((token)=>{
                 res.header('authorization',token);
-                res.send('Sign in existoso!');
+                res.send('Sign up existoso!');
                 // res.sendFile('html/users.html', {root: __dirname });
             });            
         }
@@ -129,7 +141,10 @@ app.post('/users/login', (req, res)=>{
         }else {
             bcrypt.compare(req.body.password,user.password, (err,completed)=>{
                 if(completed){
-                    res.send(user.generateAuthToken());
+                    user.generateAuthToken((token)=>{
+                        res.header('authorization',token);
+                        res.send('Log in existoso!');
+                    });         
                 }else if(err){
                     res.send('Oops! Hubo un problema!');
                 }else{
