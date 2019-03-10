@@ -1,3 +1,5 @@
+//MEJORA: PARTIR EL SERVER EN DISTINTOS ROUTER
+
 const express = require('express');
 const _ = require('lodash');
 const bodyparser = require('body-parser');
