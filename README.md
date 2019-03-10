@@ -1,5 +1,5 @@
 # To do App
-Creación de un server y backend de aplicación web para la creación y manejo de quehaceres.  
+Creación de backend de aplicación web para la creación y manejo de quehaceres.  
 
 ### Prerequisitos
 
