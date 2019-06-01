@@ -1,4 +1,4 @@
-//MEJORA: PARTIR EL SERVER EN DISTINTOS ROUTER
+//MEJORA: PARTIR EL SERVER EN DISTINTOS ROUTERS
 
 const express = require('express');
 const _ = require('lodash');
@@ -21,8 +21,6 @@ app.use(bodyparser.json());
 mongoose.set('useFindAndModify', false);
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useCreateIndex', true);
-
-
 
 
 app.post('/todos',authenticate,(req, res)=>{
